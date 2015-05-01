@@ -1,5 +1,6 @@
 
-  - name: Update of the system
-    apt:
-      update_cache=yes
-      upgrade=safe
+- name: Update of the system
+  apt:
+   update_cache=yes
+   upgrade=safe
+
