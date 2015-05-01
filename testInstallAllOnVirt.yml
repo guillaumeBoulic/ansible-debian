@@ -2,16 +2,12 @@
 - hosts: virtual
   become_method: su
   gather_facts: true
+  become: true
+  become_user: root
   roles:
    - update
-     become: true
-     become_user: root
    - common
-     become: true
-     become_user: root
    - lamp
-     become: true
-     become_user: root
    
      
 
