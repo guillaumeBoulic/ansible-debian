@@ -6,6 +6,9 @@
    - update
      become: true
      become_user: root
+   - lamp
+     become: true
+     become_user: root
    
      
 

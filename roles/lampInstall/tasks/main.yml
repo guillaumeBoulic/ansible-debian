@@ -1,0 +1,13 @@
+- name: System - Install MySQL
+  apt: pkg={{item}} state=present
+  with_items:
+    - mysql-server
+- name: System - Install Apache
+  apt: pkg={{item}} state=present
+  with_items:
+    - apache2
+    - php5
+    - php5-mysql
+    - php5-memcache
+
+
