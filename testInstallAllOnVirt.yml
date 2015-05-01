@@ -7,5 +7,5 @@
   become_method: su
   gather_facts: true
   roles:
-   - maj
+   - update
 
