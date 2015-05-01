@@ -1,9 +1,4 @@
 
-- name: Update of the system
-  apt:
-   update_cache=yes
-   upgrade=safe
-
 - name: Install base packages
   apt: pkg={{item}} state=latest
   with_items:
