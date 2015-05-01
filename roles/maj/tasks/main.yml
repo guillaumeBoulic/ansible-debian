@@ -1,0 +1,5 @@
+
+  - name: mise a jour de tout les paquets du système
+    apt:
+      update_cache=yes
+      upgrade=safe
