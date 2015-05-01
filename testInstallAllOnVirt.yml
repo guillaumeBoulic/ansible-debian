@@ -1,11 +1,11 @@
 ---
 - hosts: virtual
-  connection: ssh
-  remote_user: user
-  become_user: root
-  become: yes
   become_method: su
   gather_facts: true
   roles:
    - update
+     become: true
+     become_user: root
+   
+     
 
