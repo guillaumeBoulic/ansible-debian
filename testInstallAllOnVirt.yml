@@ -7,7 +7,7 @@
   roles:
    - update
    - common
-   - lamp
+   - lampInstall
    
      
 
