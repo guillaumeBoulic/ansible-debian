@@ -44,16 +44,11 @@
     - postfix
 
 - name: ad dovecot to master.cf
-  lineinfile:
-    dest={{ postfix_config_dir }}/master.cf
-    line="{{ item.line }}"
-    state=present
-    insertafter=EOF
-    create=True
-    with_items:
-      - { line: '# Dovecot LDA' }
-      - { line: 'dovecot   unix  -       n       n       -       -       pipe' }
-      - { line: '  flags=DRhu user=vmail:vmail argv=/usr/lib/dovecot/deliver -f ${sender} -d ${recipient}' }
+  lineinfile: dest={{ postfix_config_dir }}/master.cf line="{{ item }}" state=present insertafter=EOF
+  with_items:
+    - "# Dovecot LDA"
+    - "dovecot   unix  -       n       n       -       -       pipe"
+    - "  flags=DRhu user=vmail:vmail argv=/usr/lib/dovecot/deliver -f ${sender} -d ${recipient}"
 
 - name: setting-up of the virtual alias map
   template: >
@@ -64,7 +59,7 @@
   notify:
     - restart postfix
 
-- name: setting-up of the virtual_mailbox_domains
+- name: setting-up of the virtual mailbox domains
   template: >
     src=virtual_mailbox_domains.j2
     dest={{ postfix_config_dir }}/virtual_mailbox_domains
@@ -73,7 +68,7 @@
   notify:
     - restart postfix
 
-- name: setting-up of the virtual alias map
+- name: setting-up of the virtual mailbox maps
   template: >
     src=virtual_mailbox_maps.j2
     dest={{ postfix_config_dir }}/virtual_mailbox_maps
@@ -84,7 +79,7 @@
 
 - name: update of the 3 db with postmap
   command: postmap {{ item }}
-  with_item:
-    - {{ postfix_config_dir }}/virtual_mailbox_domains
-    - {{ postfix_config_dir }}/virtual_mailbox_maps
-    - {{ postfix_config_dir }}/virtual_alias_maps
+  with_items:
+    - "{{ postfix_config_dir }}/virtual_mailbox_domains"
+    - "{{ postfix_config_dir }}/virtual_mailbox_maps"
+    - "{{ postfix_config_dir }}/virtual_alias_maps"
