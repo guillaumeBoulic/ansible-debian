@@ -1,4 +1,0 @@
-# file: roles/supervisor/meta/main.yml
-
-dependencies:
-  - { role: python }

@@ -16,6 +16,8 @@
     - sysstat
     - tmux
     - tshark
+    - ccze
+    - nano
 
 - name: Common | Make sure git is installed
   apt: pkg=git
