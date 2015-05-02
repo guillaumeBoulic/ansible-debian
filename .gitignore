@@ -1,4 +1,4 @@
 host
 *~
 ~*
-roles/postfix/vars/main.yml
+roles/mail/vars/
