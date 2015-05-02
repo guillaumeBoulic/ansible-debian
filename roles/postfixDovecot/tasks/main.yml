@@ -43,15 +43,6 @@
     - common
     - postfix
 
-- name: ad dovecot to master.cf
-  lineinfile: dest={{ postfix_config_dir }}/master.cf line="{{ item }}" state=present insertafter=EOF
-  with_items:
-    - "# Dovecot LDA"
-    - "dovecot   unix  -       n       n       -       -       pipe"
-    - "  flags=DRhu user=vmail:vmail argv=/usr/lib/dovecot/deliver -f ${sender} -d ${recipient}"
-    - "smtps     inet  n       -       -       -       -       smtpd"
-    - "submission inet n       -       -       -       -       smtpd"
-
 - name: setting-up of the virtual alias map
   template: >
     src=virtual_alias_maps.j2
