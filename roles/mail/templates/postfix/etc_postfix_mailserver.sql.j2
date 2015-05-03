@@ -1,5 +1,6 @@
-DROP TABLE IF EXISTS `virtual_users`;
 DROP TABLE IF EXISTS `virtual_aliases`;
+DROP TABLE IF EXISTS `virtual_users`;
+DROP TABLE IF EXISTS `recipient_bcc`;
 DROP TABLE IF EXISTS `virtual_domains`;
 
 CREATE TABLE IF NOT EXISTS `virtual_domains` (
@@ -54,8 +55,3 @@ CREATE TABLE IF NOT EXISTS `recipient_bcc` (
     ('{{virtual_alias.domain_pk_id}}', '{{virtual_alias.source}}', '{{virtual_alias.destination}}');
 {% endfor %}
 
-{% for bcc_recipient in mail_bcc_recipients %}
-    INSERT INTO `{{mail_mysql_database}}`.`bcc_recpients` (`domain_id`, `source`, `destination`)
-    VALUES
-    ('{{virtual_alias.domain_pk_id}}', '{{virtual_alias.source}}', '{{virtual_alias.destination}}');
-{% endfor %}

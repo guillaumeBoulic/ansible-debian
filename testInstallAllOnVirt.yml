@@ -17,18 +17,11 @@
       tags: step2
     - role: python
       tags: step2
-    - role: nginx
+    - role: apache
       tags: step2
     - role: mysql
       tags: step2
     - role: mail
       tags: step2
-    - role: vpn
-      tags: step2
-    - role: znc
-      tags: step2
-    - role: firewall
-      tags: step2
-    - role: supervisor 
      
 

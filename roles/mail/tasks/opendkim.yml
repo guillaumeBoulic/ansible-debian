@@ -12,12 +12,12 @@
 - name: Mail | opendkim | Make sure the OpenDKIM key directories are present
   file: state=directory path=/etc/opendkim/keys/{{ item.name }} group=opendkim owner=opendkim
   with_items:
-    - $mail_virtual_domains
+    - "{{ mail_virtual_domains }}"
 
 - name: Mail | opendkim | Generate OpenDKIM keys
   command: opendkim-genkey -r -d {{ item.name }} -D /etc/opendkim/keys/{{ item.name }}/ creates=/etc/opendkim/keys/{{ item.name }}/default.private
   with_items:
-    - $mail_virtual_domains
+    - "{{ mail_virtual_domains }}"
 
 - name: Mail | opendkim | Update the OpenDKIM configuration - pt. 1 (/etc/opendkim/KeyTable)
   template: src=opendkim/etc_opendkim_KeyTable.j2 dest=/etc/opendkim/KeyTable owner=opendkim group=opendkim

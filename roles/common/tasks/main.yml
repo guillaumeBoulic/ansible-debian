@@ -27,4 +27,4 @@
   with_items:
     - encfs
     - libfuse-dev
-    - fuse-utils
+    - fuse

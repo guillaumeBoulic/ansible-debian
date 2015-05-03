@@ -53,6 +53,11 @@
   notify:
     - restart dovecot
 
+- name: Mail | dovecot | Update the user 
+  user: name={{ mailserver_user }} system=yes state=present groups=dovecot
+  notify:
+    - restart dovecot
+
 - name: Mail | dovecot | Ensure correct permissions on Dovecot config directory - pt. 1
   shell: chown -R {{ mailserver_user }}:dovecot /etc/dovecot
   notify:

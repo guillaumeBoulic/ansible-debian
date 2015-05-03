@@ -1,5 +1,11 @@
 # file: roles/mailserver/tasks/postfix.yml
 
+- name: Mail | postfix | Create the group {{ mailserver_group }}
+  group: name={{ mailserver_group }} system=yes state=present gid={{ mailserver_gid }}
+
+- name: Mail | postfix | Create the user {{ mailserver_user }}
+  user: name={{ mailserver_user }} system=yes state=present group={{ mailserver_group }} uid={{ mailserver_uid }}
+ 
 - name: Mail | postfix | Make sure postfix and its dependencies are installed
   apt: pkg={{ item }} state=installed
   with_items:
