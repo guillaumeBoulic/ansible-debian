@@ -1,0 +1,4 @@
+# file: roles/mail/meta/main.yml
+
+dependencies:
+  - { role: nat }
