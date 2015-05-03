@@ -1,0 +1,9 @@
+---
+- name: Apache |  Make sure the Apache and php packages are installed
+  apt: pkg={{ item }}
+  with_items:
+    - apache2
+    - php5
+    - libapache2-mod-php5
+    - php5-mysql
+
