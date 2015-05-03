@@ -5,7 +5,7 @@
     name: '{{ item }}'
     state: 'latest'
     install_recommends: False
-  with_item:
+  with_items:
     - build-essential
     - zlib1g-dev
     - libyaml-dev
@@ -82,12 +82,12 @@
 - name: Make sure GitLab has the proper access
   file: path={{ item }} owner={{ gitlab_user }} recurse=yes mode='u+rwx,g=rx' state=directory
   with_items:
-    - {{ gitlab_home + "/log" }}
-    - {{ gitlab_home + "/tmp" }}
-    - {{ gitlab_home + "gitlab-satellites" }}
-    - {{ gitlab_home + "tmp/pids" }}
-    - {{ gitlab_home + "tmp/sockets" }}
-    - {{ gitlab_home + "public/uploads" }}
+    - '{{ gitlab_home + "/log" }}'
+    - '{{ gitlab_home + "/tmp" }}'
+    - '{{ gitlab_home + "gitlab-satellites" }}'
+    - '{{ gitlab_home + "tmp/pids" }}'
+    - '{{ gitlab_home + "tmp/sockets" }}'
+    - '{{ gitlab_home + "public/uploads" }}'
   notify:
     - Restart gitlab
 
@@ -102,16 +102,16 @@
     - Restart gitlab
 
 - name: Copy the example Rack attack config and Configure Redis connection settings
-  command: {{ item }}
+  command: "{{ item }}"
   with_items:
-    - '{{ "cp " + gitlab_home + "/config/resque.yml.example " + gitlab_home + "/config/resque.yml" }}
-    - '{{ "cp " + gitlab_home + "/config/initializers/rack_attack.rb.example " + gitlab_home + "/config/initializers/rack_attack.rb" }}
+    - '{{ "cp " + gitlab_home + "/config/resque.yml.example " + gitlab_home + "/config/resque.yml" }}'
+    - '{{ "cp " + gitlab_home + "/config/initializers/rack_attack.rb.example " + gitlab_home + "/config/initializers/rack_attack.rb" }}'
   become_user: git
   notify:
     - Restart gitlab
 
 - name: Copy the example Rack attack config and Configure Redis connection settings
-  command: {{ item }}
+  command: "{{ item }}"
   with_items:
     - 'git config --global user.name "GitLab"'
     - '{{ "git config --global user.email git@git." + fqdn }}'
@@ -150,7 +150,7 @@
     - Restart gitlab
 
 - name: Install Init Script
-  command: {{ item }}
+  command: "{{ item }}"
   with_items:
     - 'cp lib/support/init.d/gitlab /etc/init.d/gitlab'
     - 'update-rc.d gitlab defaults 21'
@@ -171,7 +171,7 @@
     - Restart gitlab
 
 - name: Install the Passenger module 
-  command: {{ item }}
+  command: "{{ item }}"
   with_items:
     - 'gem install passenger'
     - 'passenger-install-apache2-module >> /etc/apache2/apache2.conf'
