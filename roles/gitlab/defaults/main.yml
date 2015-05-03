@@ -1,0 +1,13 @@
+---
+# ---- Internal application settings ----
+
+# System user, group and home directory
+gitlab_user: 'git'
+gitlab_group: 'git'
+
+# ---- GitLab directory layout ----
+
+# Home directory
+gitlab_home: '/home/git'
+
+gitlab_mysql_password: ldjfgsmuJFQJNBDF6876df8g7sdfg*-+sdfg57sfdg
