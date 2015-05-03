@@ -11,4 +11,3 @@ dependencies:
   - { role: logwatch }
   - { role: tmpreaper }
   - { role: ssh }
-  - { role: powerdns }
