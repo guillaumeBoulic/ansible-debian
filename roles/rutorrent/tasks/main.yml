@@ -1,0 +1,227 @@
+---
+# file: roles/config/tasks/main.ym;
+
+## tags: apache
+
+- name: Remove default sites-enabled
+  command: a2dissite default
+  sudo: yes
+  tags: apache
+  notify:
+    - restart apache
+
+- name: Enable apache ssl
+  command: a2enmod ssl
+  sudo: yes
+  tags: apache
+  notify:
+    - restart apache
+
+## tags: ssl, newkey
+
+- name: Create key and cert dir
+  file:
+    path=/etc/apache2/ssl
+    state=directory
+    owner=root
+    group=root
+  sudo: yes
+  tags: ssl
+
+- name: Create openssl conf file
+  template:
+    src=openssl.conf.j2
+    dest={{ ssl_dir }}/openssl.conf
+    owner=root
+    group=root
+    mode=0640
+  sudo: yes
+  tags: ssl
+
+- name: Delete current certs (tag newkey)
+  file: path={{ ssl_dir }}/{{ item }} state=absent
+  with_items:
+    - "{{ ssl_key }}"
+    - "{{ ssl_cert }}"
+  sudo: yes 
+  tags: newkey
+
+- name: Create key and cert file
+  command: 
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 -config {{ ssl_dir }}/openssl.conf -keyout {{ ssl_dir }}/{{ ssl_key }} -out {{ ssl_dir }}/{{ ssl_cert}}
+    creates={{ ssl_dir }}/{{ ssl_key }}
+    creates={{ ssl_dir }}/{{ ssl_cert }}
+  sudo: yes
+  tags: ssl
+  notify:
+    - restart apache
+
+## tags: rutorrent
+
+- name: Deploy default rtorrent config
+  template: 
+    src=rtorrent.rc.j2 
+    dest={{ home }}/.rtorrent.rc
+  tags: ruconfig
+
+- name: Enable scgi for ru/r connectivity
+  file: 
+    src=/etc/apache2/mods-available/scgi.load 
+    dest=/etc/apache2/mods-enabled/scgi.load 
+    state=link
+  sudo: yes
+  tags: 
+    - ruconfig
+    - apache
+  notify:
+  - restart apache
+
+- name: Remove old rupassed file
+  file: 
+    path={{ ru_passwd_file }}
+    state=absent
+  sudo: yes
+  tags: ruconfig
+
+- name: Create rupasswd file
+  htpasswd: 
+    path={{ ru_passwd_file }}
+    name={{ ru_user }} 
+    password={{ ru_password }}
+    create=yes
+    state=present
+    owner=root
+    group=www-data
+    mode=0640
+  sudo: yes
+  tags: ruconfig
+
+- name: Create rutorrent virtual directory
+  template:
+    src=rutorrent.j2
+    dest=/etc/apache2/sites-available/rutorrent
+    owner=root
+    group=root
+  sudo: yes
+  tags: 
+    - rutorrent
+    - apache
+
+- name: Enable rutorrent site
+  command: a2ensite rutorrent
+  sudo: yes
+  notify:
+    - restart apache
+  tags: rutorrent
+
+# Get required build dependencies
+- apt: name={{ item }} state=installed update_cache=yes cache_valid_time=3600
+  with_items: 
+    - subversion
+    - build-essential
+    - automake
+    - libtool
+    - libcppunit-dev
+    - libsigc++-2.0-dev
+    - libssl-dev
+    - libcurl4-openssl-dev
+    - unzip
+    - unrar-free
+    - curl
+    - libncurses5-dev
+    - apache2
+    - php5
+    - php5-cli
+    - php5-curl
+    - libapache2-mod-scgi
+    - python-passlib
+    - ffmpeg
+    - mediainfo
+    - screen
+    - vim
+  sudo: yes
+  tags: depends
+
+# Create contribution directory
+- file: path={{ contrib }} state=directory
+
+# Get source
+- subversion: dest={{ contrib }}/{{ dir_xmlrpc }} repo={{ svn_xmlrpc_c }}
+  tags: source
+- get_url: dest={{ contrib}} url={{ item }}.tar.gz
+  with_items:
+    - "{{ src_libtorrent }}{{ ver_libtorrent }}"
+    - "{{ src_rtorrent }}{{ ver_rtorrent }}"
+    - "{{ src_rutorrent }}{{ ver_rutorrent }}"
+    - "{{ src_ruplugins }}{{ ver_ruplugins }}"
+  tags: source
+
+# Extract source
+- command: tar xvf {{ ver_libtorrent }}.tar.gz  chdir={{contrib}} creates={{ ver_libtorrent }}
+  tags: source
+- command: tar xvf {{ ver_rtorrent }}.tar.gz  chdir={{contrib}} creates={{ ver_rtorrent }}
+  tags: source
+- command: tar xvf {{ ver_rutorrent }}.tar.gz  chdir={{contrib}} creates={{ dir_rutorrent }}
+  tags: web
+- command: tar xvf {{ ver_ruplugins }}.tar.gz  chdir={{contrib}} creates={{ dir_ruplugins }}
+  tags: web
+
+# Build and install binaries and libs
+- name: Build and Install libtorrent
+  command: chdir={{ contrib }}/{{ ver_libtorrent }} {{ item }} #creates=/usr/bin/libtool
+  sudo: yes
+  with_items:
+    - ./autogen.sh
+    - ./configure
+    - make 
+    - make install 
+  tags: source
+
+- name: Build and Install xmlrpc
+  command: chdir={{ contrib }}/{{ dir_xmlrpc }} {{ item }} #creates=/usr/local/bin/xmlrpc-c-config
+  sudo: yes
+  with_items:
+    - ./configure --disable-cplusplus
+    - make 
+    - make install
+  tags: source
+
+- name: Build and Install rtorrent
+  command: chdir={{ contrib }}/{{ ver_rtorrent }} {{ item }} #creates=/usr/local/bin/rtorrent
+  sudo: yes
+  with_items:
+    - ./autogen.sh
+    - ./configure --with-xmlrpc-c
+    - make 
+    - make install
+    - ldconfig 
+  tags: source
+    
+# Deploy rtorrent and rutorrent to /var/www
+- name: Create rtorrent directories
+  file: path={{ item }} state=directory
+  with_items:
+    - "{{ home }}/rtorrent"
+    - "{{ home }}/rtorrent/session"
+    - "{{ home }}/rtorrent/watch"
+    - "{{ home }}/rtorrent/download"
+  tags: web
+
+- name: Deploy rutorrent
+  command: rsync -a {{ contrib }}/{{ dir_rutorrent }}/ /var/www/rutorrent/
+  sudo: yes
+  tags: web
+
+- name: Deploy rutorrent plugins
+  command: rsync -a {{ contrib }}/{{ dir_ruplugins }}/ /var/www/rutorrent/plugins/
+  sudo: yes
+  tags: web
+
+- file: path=/var/www/rutorrent/ 
+        state=directory 
+        recurse=yes
+        owner={{ apache_user }} 
+        group={{ apache_user }} 
+  sudo: yes
+  tags: web
+
