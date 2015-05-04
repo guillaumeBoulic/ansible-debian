@@ -29,21 +29,21 @@
     - ruby2.1
     - redis-server
     - expect
+    - sudo
+    - bundler
 
 - name: Create GitLab system group
   group:
     name: '{{ gitlab_group }}'
-    system: True
     state: 'present'
 
 - name: Create GitLab user
   user:
     name: '{{ gitlab_user }}'
     group: '{{ gitlab_group }}'
-    home: '{{ gitlab_home }}'
+    home: '/home/git'
     comment: 'GitLab'
     append: True
-    system: True
     state: 'present'
 
 
@@ -54,20 +54,22 @@
   mysql_db: name=gitlabhq_production state=present 
 
 - name: Disable Redis listening on TCP by setting 'port' to 0
-  command: sed 's/^port .*/port 0/' /etc/redis/redis.conf | tee /etc/redis/redis.conf
-  notify:
-    - restart redis
-
-- name: Enable Redis socket for default Debian path
-  command: echo 'unixsocket /var/run/redis/redis.sock' | sudo tee -a /etc/redis/redis.conf
+  copy:
+    src: 'redis.conf'
+    dest: '/etc/redis/redis.conf'
+    owner: 'root'
+    group: 'root'
+    mode: '644'
   notify:
     - restart redis
 
 - name: Clone gitlab
-  git: repo=https://gitlab.com/gitlab-org/gitlab-ce.git dest={{ gitlab_home }} clone=yes version=v7.10.1
-  become_user: git
+  git: repo=https://gitlab.com/gitlab-org/gitlab-ce.git dest={{ gitlab_home }} clone=yes version=v7.10.1 force=yes
   notify:
     - Restart gitlab
+
+- name: Make sure GitLab has the proper access
+  file: path={{ gitlab_home }} owner={{ gitlab_user }} recurse=yes mode='u+rwx,g=rx' state=directory
 
 - name: Configure gitlab.yml
   template:
@@ -84,16 +86,16 @@
   with_items:
     - '{{ gitlab_home + "/log" }}'
     - '{{ gitlab_home + "/tmp" }}'
-    - '{{ gitlab_home + "gitlab-satellites" }}'
-    - '{{ gitlab_home + "tmp/pids" }}'
-    - '{{ gitlab_home + "tmp/sockets" }}'
-    - '{{ gitlab_home + "public/uploads" }}'
+    - '/home/git/gitlab-satellites'
+    - '{{ gitlab_home + "/tmp/pids" }}'
+    - '{{ gitlab_home + "/tmp/sockets" }}'
+    - '{{ gitlab_home + "/public/uploads" }}'
   notify:
     - Restart gitlab
 
 - name: Configure unicorn.rb
   copy:
-    src: 'unicorn.rb.j2'
+    src: 'unicorn.rb'
     dest: '{{ gitlab_home + "/config/unicorn.rb" }}'
     owner: '{{ gitlab_user }}'
     group: '{{ gitlab_group }}'
@@ -106,22 +108,26 @@
   with_items:
     - '{{ "cp " + gitlab_home + "/config/resque.yml.example " + gitlab_home + "/config/resque.yml" }}'
     - '{{ "cp " + gitlab_home + "/config/initializers/rack_attack.rb.example " + gitlab_home + "/config/initializers/rack_attack.rb" }}'
-  become_user: git
   notify:
     - Restart gitlab
+
+- name: Make sure GitLab has the proper access
+  file: path={{ item }} owner={{ gitlab_user }} group=root mode='754' state=file
+  with_items:
+    - '{{ gitlab_home + "/config/resque.yml" }}'
+    - '{{ gitlab_home + "/config/initializers/rack_attack.rb" }}'
 
 - name: Copy the example Rack attack config and Configure Redis connection settings
   command: "{{ item }}"
   with_items:
-    - 'git config --global user.name "GitLab"'
-    - '{{ "git config --global user.email git@git." + fqdn }}'
-    - 'git config --global core.autocrlf input'
-  become_user: git
+    - 'sudo -u git -H git config --global user.name "GitLab"'
+    - '{{ "sudo -u git -H git config --global user.email git@git." + fqdn }}'
+    - 'sudo -u git -H git config --global core.autocrlf input'
   notify:
     - Restart gitlab
 
 - name: Configure mysql
-  copy:
+  template:
     src: 'database.yml.j2'
     dest: '{{ gitlab_home + "/config/database.yml" }}'
     owner: '{{ gitlab_user }}'
@@ -132,20 +138,17 @@
   file: path={{ gitlab_home + "/config/database.yml" }} owner={{ gitlab_user }} mode='640'
 
 - name: Install gems for MySQL
-  command: bundle install --deployment --without development test postgres aws
-  become_user: git
+  command: sudo -u git -H bundle install --deployment --without development test postgres aws
   notify:
     - Restart gitlab
 
 - name: Install GitLab Shell
-  command: bundle exec rake gitlab:shell:install[v2.0.1] REDIS_URL=unix:/var/run/redis/redis.sock RAILS_ENV=production
-  become_user: git
+  command: sudo -u git -H bundle exec rake gitlab:shell:install[v2.0.1] REDIS_URL=unix:/var/run/redis/redis.sock RAILS_ENV=production
   notify:
     - Restart gitlab
 
 - name: Install GitLab Shell
-  command: expect -c \"spawn bundle exec rake gitlab:setup RAILS_ENV=production GITLAB_ROOT_PASSWORD={{ gitlab_root_pass }}; expect \\"Do you want to continue (yes/no)?\\"; send \\"yes\\";\"
-  become_user: git
+  command: expect -c \"spawn sudo -u git -H bundle exec rake gitlab:setup RAILS_ENV=production GITLAB_ROOT_PASSWORD={{ gitlab_root_pass }}; expect \\"Do you want to continue (yes/no)?\\"; send \\"yes\\";\"
   notify:
     - Restart gitlab
 
@@ -159,14 +162,12 @@
   command: cp lib/support/logrotate/gitlab /etc/logrotate.d/gitlab
 
 - name: Check Application Status
-  command: bundle exec rake gitlab:env:info RAILS_ENV=production
-  become_user: git
+  command: sudo -u git -H bundle exec rake gitlab:env:info RAILS_ENV=production
   notify:
     - Restart gitlab
 
 - name: Compile Assets
-  command: bundle exec rake assets:precompile RAILS_ENV=production
-  become_user: git
+  command: sudo -u git -H bundle exec rake assets:precompile RAILS_ENV=production
   notify:
     - Restart gitlab
 
