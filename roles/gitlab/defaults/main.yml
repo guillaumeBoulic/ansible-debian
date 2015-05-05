@@ -1,13 +1,17 @@
 ---
-# ---- Internal application settings ----
+gitlab_branch: 7-7-stable
+gitlab_shell_version: v2.4.1
 
-# System user, group and home directory
-gitlab_user: 'git'
-gitlab_group: 'git'
+gitlab_user: git
+gitlab_ssh_port: 22
 
-# ---- GitLab directory layout ----
+gitlab_deploy_local_mysql: false
+gitlab_deploy_local_redis: false
 
-# Home directory
-gitlab_home: '/home/git/gitlab'
+gitlab_db_type: mysql
+gitlab_db_name: gitlab
+gitlab_db_user: gitlab
+gitlab_db_passwd: yie6AiGh
 
-gitlab_mysql_password: ldjfgsmuJFQJNBDF6876df8g7sdfg*-+sdfg57sfdg
+gitlab_redis_host: 127.0.0.1
+gitlab_redis_port: 6379
