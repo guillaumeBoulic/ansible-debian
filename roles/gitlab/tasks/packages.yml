@@ -21,7 +21,7 @@
     - mysql-server
     - mysql-client
     - libmysqlclient-dev
-    - ruby1.9.1
+    - ruby
     - bundler
     - python2.7
     - python-mysqldb
@@ -30,3 +30,5 @@
     - cmake
     - libkrb5-dev
     - sudo
+    - nodejs
+    - rake

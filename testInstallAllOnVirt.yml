@@ -23,5 +23,6 @@
 #      tags: step2
 #    - role: mail
 #      tags: step2
-     - role: pptp
+#    - role: pptp
+    - role: gitlab
 

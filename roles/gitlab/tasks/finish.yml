@@ -1,0 +1,17 @@
+---
+
+- name: remove sudo
+  apt: pkg=sudo state=absent
+
+- name: add runscript tout init.d
+  command: cp /home/{{ gitlab_user }}/gitlab/lib/support/init.d/gitlab /etc/init.d/gitlab
+
+- name: ensure the start at boot
+  command: update-rc.d gitlab defaults 21
+
+- name: Ensure logretate
+  command: cp /home/{{ gitlab_user }}/gitlab/lib/support/logrotate/gitlab /etc/logrotate.d/gitlab
+
+
+
+

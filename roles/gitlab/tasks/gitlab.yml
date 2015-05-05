@@ -4,8 +4,19 @@
 - name: ensure there's a user for Gitlab
   user: name={{ gitlab_user }} comment="GitLab" createhome=yes
 
+- name: Adding user to sudoers files
+  lineinfile: dest=/etc/hosts line="{{ item }}" insertafter=EOF
+  with_items:
+    - "{{ ansible_ssh_user }}    ALL=(ALL:ALL) ALL"
+    - "{{ gitlab_user }}    ALL=(ALL:ALL) ALL"
+
+- name: Restart sudo
+  service:
+    name: 'sudo'
+    state: 'restarted'
+
 - name: Clone GitLab source code from git.
-  git: repo=https://github.com/gitlabhq/gitlabhq.git dest=/home/{{ gitlab_user }}/gitlab version={{ gitlab_branch }}
+  git: repo=https://github.com/gitlabhq/gitlabhq.git dest=/home/{{ gitlab_user }}/gitlab version={{ gitlab_branch }} force=yes
   changed_when: False
   notify:
     - Restart gitlab
@@ -74,17 +85,11 @@
   notify:
     - Restart gitlab
 
-- name: ensure uwsgi config file exists
-  template: src=uwsgi.ini.j2 dest=/etc/uwsgi/vassals/gitlab.ini mode=0644 owner=root group=root
-  notify:
-    - Restart gitlab
-
 - name: Configure unicorn.rb
   copy:
     src: 'unicorn.rb'
-    dest: '{{ gitlab_home + "/config/unicorn.rb" }}'
+    dest: '/home/{{ gitlab_user }}/gitlab/config/unicorn.rb'
     owner: '{{ gitlab_user }}'
-    group: '{{ gitlab_group }}'
     mode: '644'
   notify:
     - Restart gitlab

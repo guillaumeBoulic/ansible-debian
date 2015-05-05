@@ -4,6 +4,7 @@
 - include: gitlab.yml
 - include: gitlab-shell.yml
 - include: apache.yml
+- include: finish.yml
 
 ## TODO
 # AllowUsers git ... in /etc/ssh/sshd_config

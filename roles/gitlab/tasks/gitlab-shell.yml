@@ -24,3 +24,4 @@
 ## TODO maybe:
 # chmod -R ug+rwX,o-rwx /home/git/repositories: false
 # find /home/git/repositories -type d -print0 | xargs -0 chmod g+s: false
+

@@ -1,7 +1,7 @@
 <VirtualHost *:80>
-     ServerName git.{{ hostname }}
-     DocumentRoot {{ gitlab_home }}/gitlab/public
-     <Directory {{ gitlab_home }}/gitlab/public>
+     ServerName {{ gitlab_hostname }}
+     DocumentRoot /home/{{ gitlab_user }}/gitlab/public
+     <Directory /home/{{ gitlab_user }}/gitlab/public>
          Options -MultiViews
      </Directory>
   </VirtualHost>
