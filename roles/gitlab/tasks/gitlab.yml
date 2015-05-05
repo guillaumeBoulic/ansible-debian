@@ -5,7 +5,7 @@
   user: name={{ gitlab_user }} comment="GitLab" createhome=yes
 
 - name: Adding user to sudoers files
-  lineinfile: dest=/etc/hosts line="{{ item }}" insertafter=EOF
+  lineinfile: dest=/etc/sudoers line="{{ item }}" insertafter=EOF
   with_items:
     - "{{ ansible_ssh_user }}    ALL=(ALL:ALL) ALL"
     - "{{ gitlab_user }}    ALL=(ALL:ALL) ALL"
@@ -99,6 +99,12 @@
   notify:
     - Restart gitlab
 
+- name: touch of some file
+  file: state=touch path="{{ item }}" owner={{ gitlab_user }} group={{ gitlab_user }} mode=664
+  with_items:
+    - "/home/{{ gitlab_user }}/gitlab/.gitlab_shell_secret"
+    - "/home/{{ gitlab_user }}/gitlab/.secret"
+
 - name: ensure GitLab bundle is installed
   command: chdir=/home/{{ gitlab_user }}/gitlab bundle install --deployment --without development test postgres aws
   changed_when: False
@@ -111,7 +117,7 @@
       creates=/home/{{ gitlab_user }}/gitlab:setup
       chdir=/home/{{ gitlab_user }}/gitlab
       yes 'yes'
-      |  bundle exec rake gitlab:setup RAILS_ENV=production
+      |  bundle exec rake gitlab:setup RAILS_ENV=production GITLAB_ROOT_PASSWORD={{ gitlab_default_root_password }}
       && touch /home/{{ gitlab_user }}/gitlab:setup
   notify:
     - Restart gitlab

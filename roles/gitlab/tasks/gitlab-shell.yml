@@ -3,9 +3,13 @@
 
 - name: ensure Gitlab-Shell git repository is cloned
   git: repo=https://github.com/gitlabhq/gitlab-shell.git dest=/home/{{ gitlab_user }}/gitlab-shell version={{ gitlab_shell_version}}
+  notify:
+    - Restart gitlab
 
 - name: ensure gitlab-shell config is written
   template: src=gitlab_shell_config.yml.j2 dest=/home/{{ gitlab_user }}/gitlab-shell/config.yml mode=0644
+  notify:
+    - Restart gitlab
 
 ## actions taken from gitlab-shell/bin/install
 - name: .ssh directory
@@ -20,7 +24,10 @@
 
 - name: authorized_keys file with proper permisions
   file: dest=/home/{{ gitlab_user }}/.ssh/authorized_keys mode=0600 owner={{ gitlab_user }} group={{ gitlab_user }}
-
+- name: touch of some file
+  file: state=touch path="/home/git/gitlab-shell/.gitlab_shell_secret" owner={{ gitlab_user }} group={{ gitlab_user }} mode=664
+  notify:
+    - Restart gitlab
 ## TODO maybe:
 # chmod -R ug+rwX,o-rwx /home/git/repositories: false
 # find /home/git/repositories -type d -print0 | xargs -0 chmod g+s: false
