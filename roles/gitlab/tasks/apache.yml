@@ -1,0 +1,20 @@
+---
+# setup nginx ... posibly, this could be a separate role with parameters
+
+- name: Making sure that GitLab Apache site is available...
+  template: src=apache.gitlab.j2 owner='root' group='root' dest=/etc/apache2/sites-available/gitlab mode=0644
+  notify: Restart apache
+
+- name: Making sure that require apache mod are enable
+  command: "a2enmod {{ item }}"
+  with_items:
+    - rewrite
+    - ssl
+    - proxy
+    - proxy_http
+    - headers
+  notify: Restart apache
+
+- name: Making sure that the GitLab Nginx site is enabled...
+  file: src=/etc/apache2/sites-available/gitlab path=/etc/apache2/sites-enabled/gitlab state=link
+  notify: Restart apache  

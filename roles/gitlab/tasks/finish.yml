@@ -1,0 +1,42 @@
+---
+
+- name: add runscript tout init.d
+  command: cp /home/{{ gitlab_user }}/gitlab/lib/support/init.d/gitlab /etc/init.d/gitlab
+
+- name: ensure the start at boot
+  command: update-rc.d gitlab defaults 21
+
+- name: Ensure logretate
+  command: cp /home/{{ gitlab_user }}/gitlab/lib/support/logrotate/gitlab /etc/logrotate.d/gitlab
+
+- name: Secret key base
+  shell: >
+      chdir=/home/{{ gitlab_user }}/gitlab
+      bundle exec env RAILS_ENV=production rake secret
+  register: secret_key_base
+  notify:
+    - Restart gitlab
+
+- name: Adding Secret key base
+  lineinfile: dest=/etc/profile line="export SECRET_KEY_BASE={{ secret_key_base.stdout }}" insertafter=EOF
+  notify:
+    - Restart gitlab
+
+- name: Adding secret.yml file
+  copy:
+    src: 'secret.yml'
+    dest: "/home/{{ gitlab_user }}/gitlab/config/secrets.yml"
+    owner: 'git'
+    group: 'git'
+    mode: '644'
+  notify:
+    - Restart gitlab
+
+- name: Adding variable in config/environments/production.rb
+  lineinfile: dest=/home/{{ gitlab_user }}/gitlab/config/environments/production.rb line='config.secret_key_base = ENV["SECRET_KEY_BASE"]' insertafter="Gitlab::Application.configure do"
+  notify:
+    - Restart gitlab
+
+- name: remove sudo
+  apt: pkg=sudo state=absent purge=yes
+

@@ -1,0 +1,11 @@
+---
+gitlab_branch: 7-7-stable
+gitlab_shell_version: v2.4.1
+
+gitlab_user: git
+gitlab_ssh_port: 22
+
+gitlab_db_type: mysql
+gitlab_db_name: gitlab
+gitlab_db_user: gitlab
+gitlab_db_passwd: yie6AiGh

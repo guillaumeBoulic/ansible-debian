@@ -1,0 +1,16 @@
+---
+
+- name: Restart gitlab
+  service:
+    name: 'gitlab'
+    state: 'restarted'
+
+- name: restart redis
+  service:
+    name: 'redis-server'
+    state: 'restarted'
+
+- name: Restart apache
+  service:
+    name: 'apache2'
+    state: 'restarted'
