@@ -1,18 +1,13 @@
 ---
 # file: roles/config/tasks/main.ym;
+- name: ensure there's a user for Gitlab
+  user: name={{ rutorrent_user }} comment="GitLab" createhome=yes
 
 ## tags: apache
 
-- name: Remove default sites-enabled
-  command: a2dissite default
-  sudo: yes
-  tags: apache
-  notify:
-    - restart apache
 
 - name: Enable apache ssl
   command: a2enmod ssl
-  sudo: yes
   tags: apache
   notify:
     - restart apache
@@ -25,33 +20,29 @@
     state=directory
     owner=root
     group=root
-  sudo: yes
   tags: ssl
 
 - name: Create openssl conf file
   template:
     src=openssl.conf.j2
-    dest={{ ssl_dir }}/openssl.conf
+    dest={{ rutorrent_ssl_dir }}/openssl.conf
     owner=root
     group=root
     mode=0640
-  sudo: yes
   tags: ssl
 
 - name: Delete current certs (tag newkey)
-  file: path={{ ssl_dir }}/{{ item }} state=absent
+  file: path={{ rutorrent_ssl_dir }}/{{ item }} state=absent
   with_items:
-    - "{{ ssl_key }}"
-    - "{{ ssl_cert }}"
-  sudo: yes 
+    - "{{ rutorrent_ssl_key }}"
+    - "{{ rutorrent_ssl_cert }}"
   tags: newkey
 
 - name: Create key and cert file
   command: 
-    openssl req -x509 -nodes -days 365 -newkey rsa:2048 -config {{ ssl_dir }}/openssl.conf -keyout {{ ssl_dir }}/{{ ssl_key }} -out {{ ssl_dir }}/{{ ssl_cert}}
-    creates={{ ssl_dir }}/{{ ssl_key }}
-    creates={{ ssl_dir }}/{{ ssl_cert }}
-  sudo: yes
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 -config {{ rutorrent_ssl_dir }}/openssl.conf -keyout {{ rutorrent_ssl_dir }}/{{ rutorrent_ssl_key }} -out {{ rutorrent_ssl_dir }}/{{ rutorrent_ssl_cert}}
+    creates={{ rutorrent_ssl_dir }}/{{ rutorrent_ssl_key }}
+    creates={{ rutorrent_ssl_dir }}/{{ rutorrent_ssl_cert }}
   tags: ssl
   notify:
     - restart apache
@@ -61,7 +52,10 @@
 - name: Deploy default rtorrent config
   template: 
     src=rtorrent.rc.j2 
-    dest={{ home }}/.rtorrent.rc
+    dest={{ rutorrent_home }}/.rtorrent.rc
+    owner='{{ rutorrent_user }}'
+    group='{{ rutorrent_user }}'
+    mode='0644'
   tags: ruconfig
 
 - name: Enable scgi for ru/r connectivity
@@ -69,7 +63,6 @@
     src=/etc/apache2/mods-available/scgi.load 
     dest=/etc/apache2/mods-enabled/scgi.load 
     state=link
-  sudo: yes
   tags: 
     - ruconfig
     - apache
@@ -80,7 +73,6 @@
   file: 
     path={{ ru_passwd_file }}
     state=absent
-  sudo: yes
   tags: ruconfig
 
 - name: Create rupasswd file
@@ -93,23 +85,21 @@
     owner=root
     group=www-data
     mode=0640
-  sudo: yes
   tags: ruconfig
 
 - name: Create rutorrent virtual directory
   template:
     src=rutorrent.j2
-    dest=/etc/apache2/sites-available/rutorrent
+    dest=/etc/apache2/sites-available/rutorrent.conf
     owner=root
     group=root
-  sudo: yes
+    mode=0644
   tags: 
     - rutorrent
     - apache
 
 - name: Enable rutorrent site
   command: a2ensite rutorrent
-  sudo: yes
   notify:
     - restart apache
   tags: rutorrent
@@ -138,8 +128,6 @@
     - ffmpeg
     - mediainfo
     - screen
-    - vim
-  sudo: yes
   tags: depends
 
 # Create contribution directory
@@ -148,6 +136,7 @@
 # Get source
 - subversion: dest={{ contrib }}/{{ dir_xmlrpc }} repo={{ svn_xmlrpc_c }}
   tags: source
+
 - get_url: dest={{ contrib}} url={{ item }}.tar.gz
   with_items:
     - "{{ src_libtorrent }}{{ ver_libtorrent }}"
@@ -169,7 +158,6 @@
 # Build and install binaries and libs
 - name: Build and Install libtorrent
   command: chdir={{ contrib }}/{{ ver_libtorrent }} {{ item }} #creates=/usr/bin/libtool
-  sudo: yes
   with_items:
     - ./autogen.sh
     - ./configure
@@ -179,7 +167,6 @@
 
 - name: Build and Install xmlrpc
   command: chdir={{ contrib }}/{{ dir_xmlrpc }} {{ item }} #creates=/usr/local/bin/xmlrpc-c-config
-  sudo: yes
   with_items:
     - ./configure --disable-cplusplus
     - make 
@@ -188,7 +175,6 @@
 
 - name: Build and Install rtorrent
   command: chdir={{ contrib }}/{{ ver_rtorrent }} {{ item }} #creates=/usr/local/bin/rtorrent
-  sudo: yes
   with_items:
     - ./autogen.sh
     - ./configure --with-xmlrpc-c
@@ -201,27 +187,24 @@
 - name: Create rtorrent directories
   file: path={{ item }} state=directory
   with_items:
-    - "{{ home }}/rtorrent"
-    - "{{ home }}/rtorrent/session"
-    - "{{ home }}/rtorrent/watch"
-    - "{{ home }}/rtorrent/download"
+    - "{{ rutorrent_home }}/rtorrent"
+    - "{{ rutorrent_home }}/rtorrent/session"
+    - "{{ rutorrent_home }}/rtorrent/watch"
+    - "{{ rutorrent_home }}/rtorrent/download"
   tags: web
 
 - name: Deploy rutorrent
   command: rsync -a {{ contrib }}/{{ dir_rutorrent }}/ /var/www/rutorrent/
-  sudo: yes
   tags: web
 
 - name: Deploy rutorrent plugins
   command: rsync -a {{ contrib }}/{{ dir_ruplugins }}/ /var/www/rutorrent/plugins/
-  sudo: yes
   tags: web
 
 - file: path=/var/www/rutorrent/ 
         state=directory 
         recurse=yes
         owner={{ apache_user }} 
-        group={{ apache_user }} 
-  sudo: yes
+        group={{ apache_user }}
   tags: web
 

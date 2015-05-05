@@ -9,7 +9,6 @@
                 AuthName '{{ ru_login_prompt }}'
                 AuthUserFile '{{ ru_passwd_file }}'
                 Require valid-user 
-                #Require {{ ru_user }}
                 AllowOverride None
                 Order allow,deny
                 allow from all
@@ -19,7 +18,7 @@
         LogLevel warn
         CustomLog ${APACHE_LOG_DIR}/access.log combined
         SSLEngine on
-        SSLCertificateFile {{ ssl_dir }}/{{ ssl_cert }}
-        SSLCertificateKeyFile {{ ssl_dir }}/{{ ssl_key }}
+        SSLCertificateFile {{ rutorrent_ssl_dir }}/{{ rutorrent_ssl_cert }}
+        SSLCertificateKeyFile {{ ssl_dir }}/{{ rutorrent_ssl_key }}
 
 </VirtualHost>

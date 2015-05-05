@@ -1,9 +1,9 @@
-directory = {{ home }}/rtorrent/download
-session = {{ home }}/rtorrent/session
-schedule = watch_directory,5,5,load_start={{ home }}/rtorrent/watch/*.torrent
+directory = {{ rutorrent_home }}/rtorrent/download
+session = {{ rutorrent_home }}/rtorrent/session
+schedule = watch_directory,5,5,load_start={{ rutorrent_home }}/rtorrent/watch/*.torrent
 bind = 127.0.0.1
-port_range = {{ port_range }}
-scgi_port = {{ scgi_addr }}
+port_range = {{ rutorrent_port_range }}
+scgi_port = {{ rutorrent_scgi_addr }}
 use_udp_trackers = yes
 encryption = require,require_RC4,allow_incoming,try_outgoing
 dht = auto
