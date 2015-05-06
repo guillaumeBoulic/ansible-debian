@@ -5,24 +5,25 @@
   become: true
   become_user: root
   roles:
-#    - role: auth
-#      tags: step1
-#    - role: common
-#      tags: step1
-#    - role: security
-#      tags: step2
-#    - role: ssl
-#      tags: step2
-#    - role: monit
-#      tags: step2
-#    - role: python
-#      tags: step2
-#    - role: apache
-#      tags: step2
-#    - role: mysql
-#      tags: step2
-#    - role: mail
-#      tags: step2
-#     - role: pptp
-     - role: rutorrent
+    - role: auth
+      tags: step1
+    - role: common
+      tags: step1
+    - role: security
+      tags: step2
+    - role: ssl
+      tags: step2
+    - role: monit
+      tags: step2
+    - role: python
+      tags: step2
+    - role: apache
+      tags: step2
+    - role: mysql
+      tags: step2
+    - role: mail
+      tags: step2
+    - role: pptp
+    - role: gitlab
+    - role: rutorrent
 
