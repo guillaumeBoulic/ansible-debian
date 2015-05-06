@@ -1,7 +1,71 @@
 ---
 # file: roles/config/tasks/main.ym;
-- name: ensure there's a user for Gitlab
+
+# Get required build dependencies
+- apt: name={{ item }} state=installed update_cache=yes cache_valid_time=3600
+  with_items: 
+    - subversion 
+    - build-essential 
+    - automake 
+    - libtool 
+    - libcppunit-dev 
+    - libsigc++-2.0-dev 
+    - libssl-dev 
+    - libcurl4-openssl-dev 
+    - unzip 
+    - unrar-free 
+    - curl 
+    - libncurses5-dev 
+    - php5 
+    - php5-cli 
+    - php5-curl 
+    - libapache2-mod-scgi 
+    - python-passlib 
+    - mediainfo 
+    - screen 
+    - git 
+    - cmake 
+    - yasm 
+    - libqt4-dev 
+    - kdelibs5-dev 
+    - libsdl1.2-dev 
+    - libsdl-image1.2-dev 
+    - libxml2-dev 
+    - libx264-dev 
+    - libtheora-dev 
+    - libxvidcore-dev 
+    - libogg-dev 
+    - libvorbis-dev 
+    - libschroedinger-dev 
+    - libmp3lame-dev 
+    - libfaac-dev 
+    - libfaad-dev 
+    - libgsm1-dev 
+    - libopencore-amrnb-dev 
+    - libopencore-amrwb-dev 
+    - libsamplerate0-dev 
+    - libjack-dev 
+    - libsox-dev 
+    - ladspa-sdk 
+    - swh-plugins 
+    - libmad0-dev 
+    - libpango1.0-dev
+  tags: depends
+
+- name: ensure there's a user for rtorrent
   user: name={{ rutorrent_user }} comment="GitLab" createhome=yes
+
+- name: get ffmpeg source code.
+  get_url: dest=/tmp url=http://ffmpeg.org/releases/ffmpeg-0.11.tar.gz
+
+- command: tar xvf ffmpeg-0.11.tar.gz  chdir=/tmp creates=ffmpeg-0.11
+
+- name: Build and Install ffmpeg
+  command: chdir=/tmp/ffmpeg-0.11 {{ item }} #creates=/usr/bin/libtool
+  with_items:
+    - ./configure
+    - make 
+    - make install 
 
 ## tags: apache
 
@@ -41,8 +105,6 @@
 - name: Create key and cert file
   command: 
     openssl req -x509 -nodes -days 365 -newkey rsa:2048 -config {{ rutorrent_ssl_dir }}/openssl.conf -keyout {{ rutorrent_ssl_dir }}/{{ rutorrent_ssl_key }} -out {{ rutorrent_ssl_dir }}/{{ rutorrent_ssl_cert}}
-    creates={{ rutorrent_ssl_dir }}/{{ rutorrent_ssl_key }}
-    creates={{ rutorrent_ssl_dir }}/{{ rutorrent_ssl_cert }}
   tags: ssl
   notify:
     - restart apache
@@ -103,32 +165,6 @@
   notify:
     - restart apache
   tags: rutorrent
-
-# Get required build dependencies
-- apt: name={{ item }} state=installed update_cache=yes cache_valid_time=3600
-  with_items: 
-    - subversion
-    - build-essential
-    - automake
-    - libtool
-    - libcppunit-dev
-    - libsigc++-2.0-dev
-    - libssl-dev
-    - libcurl4-openssl-dev
-    - unzip
-    - unrar-free
-    - curl
-    - libncurses5-dev
-    - apache2
-    - php5
-    - php5-cli
-    - php5-curl
-    - libapache2-mod-scgi
-    - python-passlib
-    - ffmpeg
-    - mediainfo
-    - screen
-  tags: depends
 
 # Create contribution directory
 - file: path={{ contrib }} state=directory
@@ -204,7 +240,7 @@
 - file: path=/var/www/rutorrent/ 
         state=directory 
         recurse=yes
-        owner={{ apache_user }} 
-        group={{ apache_user }}
+        owner={{ rutorrent_apache_user }} 
+        group={{ rutorrent_apache_user }}
   tags: web
 
