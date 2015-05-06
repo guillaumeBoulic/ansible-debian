@@ -221,7 +221,7 @@
     
 # Deploy rtorrent and rutorrent to /var/www
 - name: Create rtorrent directories
-  file: path={{ item }} state=directory
+  file: path={{ item }} state=directory owner="{{ rutorrent_user }}" group="{{ rutorrent_user }}"
   with_items:
     - "{{ rutorrent_home }}/rtorrent"
     - "{{ rutorrent_home }}/rtorrent/session"
