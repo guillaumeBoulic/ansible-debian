@@ -1,0 +1,33 @@
+<IfModule mod_ssl.c>
+<VirtualHost *:443>
+        ServerAdmin {{ ru_email }}
+	ServerName {{ ru_add }}
+
+        DocumentRoot {{ ru_dir }}
+        <Directory {{ ru_dir }}>
+                Options Indexes FollowSymLinks MultiViews
+                AuthType Basic
+                AuthName '{{ ru_login_prompt }}'
+                AuthUserFile '{{ ru_passwd_file }}'
+                Require valid-user 
+                AllowOverride None
+                Order allow,deny
+                allow from all
+        </Directory>
+
+        ErrorLog ${APACHE_LOG_DIR}/rutorrent-error.log
+        LogLevel warn
+        CustomLog ${APACHE_LOG_DIR}/rutorrent-access.log combined
+        SSLEngine on
+        SSLCertificateFile {{ rutorrent_ssl_dir }}/{{ rutorrent_ssl_cert }}
+        SSLCertificateKeyFile {{ rutorrent_ssl_dir }}/{{ rutorrent_ssl_key }}
+
+</VirtualHost>
+<VirtualHost *:80>
+  ServerName {{ ru_add }}
+  ServerSignature Off
+
+  RewriteEngine on
+  RewriteCond %{HTTPS} !=on
+  RewriteRule .* https://%{SERVER_NAME}%{REQUEST_URI} [NE,R,L]
+</VirtualHost>

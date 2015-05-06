@@ -1,0 +1,12 @@
+[ req ]
+prompt = no
+distinguished_name = req_distinguished_name
+
+[ req_distinguished_name ]
+C = {{ rutorrent_ssl_country }}
+ST = {{ rutorrent_ssl_state }}
+L = {{ rutorrent_ssl_locality }}
+O = {{ rutorrent_ssl_org }}
+OU = {{ rutorrent_ssl_org_unit }}
+CN = {{ rutorrent_ssl_common_name }}
+emailAddress = {{ ru_email }}

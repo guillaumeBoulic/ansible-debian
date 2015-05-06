@@ -1,0 +1,266 @@
+---
+# file: roles/config/tasks/main.ym;
+
+# Get required build dependencies
+- apt: name={{ item }} state=installed update_cache=yes cache_valid_time=3600
+  with_items: 
+    - subversion 
+    - build-essential 
+    - automake 
+    - libtool 
+    - libcppunit-dev 
+    - libsigc++-2.0-dev 
+    - libssl-dev 
+    - libcurl4-openssl-dev 
+    - unzip 
+    - unrar-free 
+    - curl 
+    - libncurses5-dev 
+    - php5 
+    - php5-cli 
+    - php5-curl 
+    - libapache2-mod-scgi 
+    - python-passlib 
+    - mediainfo 
+    - screen 
+    - git 
+    - cmake 
+    - yasm 
+    - libqt4-dev 
+    - kdelibs5-dev 
+    - libsdl1.2-dev 
+    - libsdl-image1.2-dev 
+    - libxml2-dev 
+    - libx264-dev 
+    - libtheora-dev 
+    - libxvidcore-dev 
+    - libogg-dev 
+    - libvorbis-dev 
+    - libschroedinger-dev 
+    - libmp3lame-dev 
+    - libfaac-dev 
+    - libfaad-dev 
+    - libgsm1-dev 
+    - libopencore-amrnb-dev 
+    - libopencore-amrwb-dev 
+    - libsamplerate0-dev 
+    - libjack-dev 
+    - libsox-dev 
+    - ladspa-sdk 
+    - swh-plugins 
+    - libmad0-dev 
+    - libpango1.0-dev
+  tags: depends
+
+- name: ensure there's a user for rtorrent
+  user: name={{ rutorrent_user }} comment="GitLab" createhome=yes
+
+- name: get ffmpeg source code.
+  get_url: dest=/tmp url=http://ffmpeg.org/releases/ffmpeg-0.11.tar.gz
+
+- command: tar xvf ffmpeg-0.11.tar.gz  chdir=/tmp creates=ffmpeg-0.11
+
+- name: Build and Install ffmpeg
+  command: chdir=/tmp/ffmpeg-0.11 {{ item }} #creates=/usr/bin/libtool
+  with_items:
+    - ./configure
+    - make 
+    - make install 
+
+## tags: apache
+
+
+- name: Enable apache ssl
+  command: a2enmod ssl
+  tags: apache
+  notify:
+    - restart apache
+
+## tags: ssl, newkey
+
+- name: Create key and cert dir
+  file:
+    path=/etc/apache2/ssl
+    state=directory
+    owner=root
+    group=root
+  tags: ssl
+
+- name: Create openssl conf file
+  template:
+    src=openssl.conf.j2
+    dest={{ rutorrent_ssl_dir }}/openssl.conf
+    owner=root
+    group=root
+    mode=0640
+  tags: ssl
+
+- name: Delete current certs (tag newkey)
+  file: path={{ rutorrent_ssl_dir }}/{{ item }} state=absent
+  with_items:
+    - "{{ rutorrent_ssl_key }}"
+    - "{{ rutorrent_ssl_cert }}"
+  tags: newkey
+
+- name: Create key and cert file
+  command: 
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 -config {{ rutorrent_ssl_dir }}/openssl.conf -keyout {{ rutorrent_ssl_dir }}/{{ rutorrent_ssl_key }} -out {{ rutorrent_ssl_dir }}/{{ rutorrent_ssl_cert}}
+  tags: ssl
+  notify:
+    - restart apache
+
+## tags: rutorrent
+
+- name: Deploy default rtorrent config
+  template: 
+    src=rtorrent.rc.j2 
+    dest={{ rutorrent_home }}/.rtorrent.rc
+    owner='{{ rutorrent_user }}'
+    group='{{ rutorrent_user }}'
+    mode='0644'
+  tags: ruconfig
+
+- name: Enable scgi for ru/r connectivity
+  file: 
+    src=/etc/apache2/mods-available/scgi.load 
+    dest=/etc/apache2/mods-enabled/scgi.load 
+    state=link
+  tags: 
+    - ruconfig
+    - apache
+  notify:
+  - restart apache
+
+- name: Remove old rupassed file
+  file: 
+    path={{ ru_passwd_file }}
+    state=absent
+  tags: ruconfig
+
+- name: Create rupasswd file
+  htpasswd: 
+    path={{ ru_passwd_file }}
+    name={{ ru_user }} 
+    password={{ ru_password }}
+    create=yes
+    state=present
+    owner=root
+    group=www-data
+    mode=0640
+  tags: ruconfig
+
+- name: Create rutorrent virtual directory
+  template:
+    src=rutorrent.j2
+    dest=/etc/apache2/sites-available/rutorrent.conf
+    owner=root
+    group=root
+    mode=0644
+  tags: 
+    - rutorrent
+    - apache
+
+- name: Enable rutorrent site
+  command: a2ensite rutorrent
+  notify:
+    - restart apache
+  tags: rutorrent
+
+# Create contribution directory
+- file: path={{ contrib }} state=directory
+
+# Get source
+- subversion: dest={{ contrib }}/{{ dir_xmlrpc }} repo={{ svn_xmlrpc_c }}
+  tags: source
+
+- get_url: dest={{ contrib}} url={{ item }}.tar.gz
+  with_items:
+    - "{{ src_libtorrent }}{{ ver_libtorrent }}"
+    - "{{ src_rtorrent }}{{ ver_rtorrent }}"
+    - "{{ src_rutorrent }}{{ ver_rutorrent }}"
+    - "{{ src_ruplugins }}{{ ver_ruplugins }}"
+  tags: source
+
+# Extract source
+- command: tar xvf {{ ver_libtorrent }}.tar.gz  chdir={{contrib}} creates={{ ver_libtorrent }}
+  tags: source
+- command: tar xvf {{ ver_rtorrent }}.tar.gz  chdir={{contrib}} creates={{ ver_rtorrent }}
+  tags: source
+- command: tar xvf {{ ver_rutorrent }}.tar.gz  chdir={{contrib}} creates={{ dir_rutorrent }}
+  tags: web
+- command: tar xvf {{ ver_ruplugins }}.tar.gz  chdir={{contrib}} creates={{ dir_ruplugins }}
+  tags: web
+
+# Build and install binaries and libs
+- name: Build and Install libtorrent
+  command: chdir={{ contrib }}/{{ ver_libtorrent }} {{ item }} #creates=/usr/bin/libtool
+  with_items:
+    - ./autogen.sh
+    - ./configure
+    - make 
+    - make install 
+  tags: source
+
+- name: Build and Install xmlrpc
+  command: chdir={{ contrib }}/{{ dir_xmlrpc }} {{ item }} #creates=/usr/local/bin/xmlrpc-c-config
+  with_items:
+    - ./configure --disable-cplusplus
+    - make 
+    - make install
+  tags: source
+
+- name: Build and Install rtorrent
+  command: chdir={{ contrib }}/{{ ver_rtorrent }} {{ item }} #creates=/usr/local/bin/rtorrent
+  with_items:
+    - ./autogen.sh
+    - ./configure --with-xmlrpc-c
+    - make 
+    - make install
+    - ldconfig 
+  tags: source
+    
+# Deploy rtorrent and rutorrent to /var/www
+- name: Create rtorrent directories
+  file: path={{ item }} state=directory owner="{{ rutorrent_user }}" group="{{ rutorrent_user }}"
+  with_items:
+    - "{{ rutorrent_home }}/rtorrent"
+    - "{{ rutorrent_home }}/rtorrent/session"
+    - "{{ rutorrent_home }}/rtorrent/watch"
+    - "{{ rutorrent_home }}/rtorrent/download"
+  tags: web
+  notify:
+    - restart rtorrent
+
+- name: Deploy rutorrent
+  command: rsync -a {{ contrib }}/{{ dir_rutorrent }}/ /var/www/rutorrent/
+  tags: web
+
+- name: Deploy rutorrent plugins
+  command: rsync -a {{ contrib }}/{{ dir_ruplugins }}/ /var/www/rutorrent/plugins/
+  tags: web
+
+- file: path=/var/www/rutorrent/ 
+        state=directory 
+        recurse=yes
+        owner={{ rutorrent_apache_user }} 
+        group={{ rutorrent_apache_user }}
+  tags: web
+  notify:
+    - restart rtorrent
+
+- name: Add init script
+  template:
+    src=rtorrent-daemon.j2
+    dest=/etc/init.d/rtorrent-daemon
+    owner=root
+    group=root
+    mode=0770
+  notify:
+    - restart rtorrent
+
+
+- name: Add auto start
+  command: update-rc.d ​rtorrent-daemon ​defaults 99
+  notify:
+    - restart rtorrent
+
