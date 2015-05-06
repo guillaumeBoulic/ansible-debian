@@ -228,6 +228,8 @@
     - "{{ rutorrent_home }}/rtorrent/watch"
     - "{{ rutorrent_home }}/rtorrent/download"
   tags: web
+  notify:
+    - restart rtorrent
 
 - name: Deploy rutorrent
   command: rsync -a {{ contrib }}/{{ dir_rutorrent }}/ /var/www/rutorrent/
@@ -243,4 +245,22 @@
         owner={{ rutorrent_apache_user }} 
         group={{ rutorrent_apache_user }}
   tags: web
+  notify:
+    - restart rtorrent
+
+- name: Add init script
+  template:
+    src=rtorrent-daemon.j2
+    dest=/etc/init.d/rtorrent-daemon
+    owner=root
+    group=root
+    mode=0770
+  notify:
+    - restart rtorrent
+
+
+- name: Add auto start
+  command: update-rc.d ​rtorrent-daemon ​defaults 99
+  notify:
+    - restart rtorrent
 
