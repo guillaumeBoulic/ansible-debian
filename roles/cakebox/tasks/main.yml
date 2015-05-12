@@ -1,0 +1,53 @@
+---
+
+- name: install dependancie
+  apt: pkg="{{ item }}" state=installed
+  notify: Restart apache
+  with_items:
+    - curl
+    - git
+    - php5
+    - python
+    - g++
+    - make
+    - wget
+    - gcc
+    - libcurl4-openssl-dev
+    - libsasl2-2
+    - libsasl2-dev
+    - libcurl3 
+
+- name: install composer
+  shell: curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin creates=/usr/local/bin/composer
+
+- name: rename composer.phar to composer
+  shell: mv /usr/local/bin/composer.phar /usr/local/bin/composer creates=/usr/local/bin/composer
+
+- name: make composer executable
+  file: path=/usr/local/bin/composer mode=a+x state=file
+
+- name: Download nodejs 
+  get_url: url=http://nodejs.org/dist/node-latest.tar.gz dest=/tmp/node-latest.tar.gz timeout=120
+
+- name: Unpack nodejs
+  command: tar -xzf node-latest.tar.gz chdir=/tmp/
+
+- name: Compile and install nodejs {{nodejs_version_tag}}
+  shell: ./configure && make && make install chdir=/tmp/node-latest
+  sudo: true
+  when: wanted_version_installed.rc == 1
+
+- name: Install Bower
+  npm: name=bower state=present global=yes
+
+- name: Copie file from git
+  git: repo=https://github.com/Cakebox/Cakebox-light.git dest=/var/www/cakebox force=yes
+
+- name: get the last version
+  shell: git checkout -b $(git describe --tags $(git rev-list --tags --max-count=1)) chdir=/var/www/cakebox
+
+- name: composer install
+  composer: command=install working_dir=/var/www/cakebox
+
+- name: bower install
+  bower: path=/var/www/cakebox state=latest
