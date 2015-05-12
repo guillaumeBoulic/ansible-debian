@@ -28,3 +28,101 @@
     - encfs
     - libfuse-dev
     - fuse 
+
+- name: add some coloration and completion
+  lineinfile:
+    dest=/etc/skel/.bashrc
+    line="{{ item }}"
+    state=present
+    insertafter=EOF
+    create=True
+  with_items:
+    - "force_color_prompt=yes # add by ansible colo and completion"
+    - 'if [ -n "$force_color_prompt" ]; then # add by ansible colo and completion'
+    - "    if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then # add by ansible colo and completion"
+    - "	       color_prompt=yes # add by ansible colo and completion"
+    - "    else # add by ansible colo and completion"
+    - "        color_prompt= # add by ansible colo and completion"
+    - "    fi # add by ansible colo and completion end if colo1"
+    - "fi # add by ansible colo and completion end if colo2"
+    - 'if [ "$color_prompt" = yes ]; then # add by ansible colo and completion'
+    - "    PS1='${debian_chroot:+($debian_chroot)}\\[\\033[00;35m\\]\\u@\\h\\[\\033[00m\\]:\\[\\033[00;34m\\] \\w\\[\\033[00;37m\\] > ' # add by ansible colo and completion"
+    - "else # add by ansible colo and completion"
+    - "    PS1='${debian_chroot:+($debian_chroot)}\\u@\\h:\\w\\$ ' # add by ansible colo and completion"
+    - "fi # add by ansible colo and completion"
+    - "unset color_prompt force_color_prompt # add by ansible colo and completion"
+    - "# enable programmable completion features (you don't need to enable # add by ansible colo and completion"
+    - "# this, if it's already enabled in /etc/bash.bashrc and /etc/profile # add by ansible colo and completion"
+    - "# sources /etc/bash.bashrc). # add by ansible colo and completion"
+    - "if ! shopt -oq posix; then # add by ansible colo and completion"
+    - "  if [ -f /usr/share/bash-completion/bash_completion ]; then # add by ansible colo and completion"
+    - "    . /usr/share/bash-completion/bash_completion # add by ansible colo and completion"
+    - "  elif [ -f /etc/bash_completion ]; then # add by ansible colo and completion"
+    - "    . /etc/bash_completion # add by ansible colo and completion"
+    - "  fi # add by ansible colo and completion end if 1"
+    - "fi # add by ansible colo and completion end if 2"
+
+- name: add some coloration and completion
+  lineinfile:
+    dest=/etc/{{ ansible_ssh_user }}/.bashrc
+    line="{{ item }}"
+    state=present
+    insertafter=EOF
+    create=True
+  with_items:
+    - "force_color_prompt=yes # add by ansible colo and completion"
+    - 'if [ -n "$force_color_prompt" ]; then # add by ansible colo and completion'
+    - "    if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then # add by ansible colo and completion"
+    - "	       color_prompt=yes # add by ansible colo and completion"
+    - "    else # add by ansible colo and completion"
+    - "        color_prompt= # add by ansible colo and completion"
+    - "    fi # add by ansible colo and completion end if colo1"
+    - "fi # add by ansible colo and completion end if colo2"
+    - 'if [ "$color_prompt" = yes ]; then # add by ansible colo and completion'
+    - "    PS1='${debian_chroot:+($debian_chroot)}\\[\\033[00;35m\\]\\u@\\h\\[\\033[00m\\]:\\[\\033[00;34m\\] \\w\\[\\033[00;37m\\] > ' # add by ansible colo and completion"
+    - "else # add by ansible colo and completion"
+    - "    PS1='${debian_chroot:+($debian_chroot)}\\u@\\h:\\w\\$ ' # add by ansible colo and completion"
+    - "fi # add by ansible colo and completion"
+    - "unset color_prompt force_color_prompt # add by ansible colo and completion"
+    - "# enable programmable completion features (you don't need to enable # add by ansible colo and completion"
+    - "# this, if it's already enabled in /etc/bash.bashrc and /etc/profile # add by ansible colo and completion"
+    - "# sources /etc/bash.bashrc). # add by ansible colo and completion"
+    - "if ! shopt -oq posix; then # add by ansible colo and completion"
+    - "  if [ -f /usr/share/bash-completion/bash_completion ]; then # add by ansible colo and completion"
+    - "    . /usr/share/bash-completion/bash_completion # add by ansible colo and completion"
+    - "  elif [ -f /etc/bash_completion ]; then # add by ansible colo and completion"
+    - "    . /etc/bash_completion # add by ansible colo and completion"
+    - "  fi # add by ansible colo and completion end if 1"
+    - "fi # add by ansible colo and completion end if 2"
+
+- name: add some coloration and completion
+  lineinfile:
+    dest=/root/.bashrc
+    line="{{ item }}"
+    insertafter=EOF
+  with_items:
+    - "force_color_prompt=yes # add by ansible colo and completion"
+    - 'if [ -n "$force_color_prompt" ]; then # add by ansible colo and completion'
+    - "    if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then # add by ansible colo and completion"
+    - "	       color_prompt=yes # add by ansible colo and completion"
+    - "    else # add by ansible colo and completion"
+    - "        color_prompt= # add by ansible colo and completion"
+    - "    fi # add by ansible colo and completion end if colo1"
+    - "fi # add by ansible colo and completion end if colo2"
+    - 'if [ "$color_prompt" = yes ]; then # add by ansible colo and completion'
+    - "    PS1='${debian_chroot:+($debian_chroot)}\\[\\033[00;35m\\]\\u@\\h\\[\\033[00m\\]:\\[\\033[00;34m\\] \\w\\[\\033[00;37m\\] > ' # add by ansible colo and completion"
+    - "else # add by ansible colo and completion"
+    - "    PS1='${debian_chroot:+($debian_chroot)}\\u@\\h:\\w\\$ ' # add by ansible colo and completion"
+    - "fi # add by ansible colo and completion"
+    - "unset color_prompt force_color_prompt # add by ansible colo and completion"
+    - "# enable programmable completion features (you don't need to enable # add by ansible colo and completion"
+    - "# this, if it's already enabled in /etc/bash.bashrc and /etc/profile # add by ansible colo and completion"
+    - "# sources /etc/bash.bashrc). # add by ansible colo and completion"
+    - "if ! shopt -oq posix; then # add by ansible colo and completion"
+    - "  if [ -f /usr/share/bash-completion/bash_completion ]; then # add by ansible colo and completion"
+    - "    . /usr/share/bash-completion/bash_completion # add by ansible colo and completion"
+    - "  elif [ -f /etc/bash_completion ]; then # add by ansible colo and completion"
+    - "    . /etc/bash_completion # add by ansible colo and completion"
+    - "  fi # add by ansible colo and completion end if 1"
+    - "fi # add by ansible colo and completion end if 2"
+

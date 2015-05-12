@@ -254,13 +254,13 @@
     dest=/etc/init.d/rtorrent-daemon
     owner=root
     group=root
-    mode=0770
+    mode=0775
   notify:
     - restart rtorrent
 
 
 - name: Add auto start
-  command: update-rc.d ​rtorrent-daemon ​defaults 99
+  cron: name="start rtorrent at start" special_time=reboot job="/etc/init.d/rtorrent-daemon start"
   notify:
     - restart rtorrent
 

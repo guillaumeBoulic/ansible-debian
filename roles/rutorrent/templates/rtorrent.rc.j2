@@ -9,3 +9,5 @@ encryption = require,require_RC4,allow_incoming,try_outgoing
 dht = auto
 dht_port = 6881
 peer_exchange = yes
+execute = {sh,-c,/usr/bin/php /var/www/rutorrent/php/initplugins.php {{ rutorrent_user }} &}
+
