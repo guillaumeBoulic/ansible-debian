@@ -64,7 +64,7 @@
   command: chdir=/tmp/ffmpeg-0.11 {{ item }} #creates=/usr/bin/libtool
   with_items:
     - ./configure
-    - make 
+    - make -j 8
     - make install 
 
 ## tags: apache
@@ -197,7 +197,7 @@
   with_items:
     - ./autogen.sh
     - ./configure
-    - make 
+    - make -j 8
     - make install 
   tags: source
 
@@ -205,7 +205,7 @@
   command: chdir={{ contrib }}/{{ dir_xmlrpc }} {{ item }} #creates=/usr/local/bin/xmlrpc-c-config
   with_items:
     - ./configure --disable-cplusplus
-    - make 
+    - make -j 8
     - make install
   tags: source
 
@@ -214,7 +214,7 @@
   with_items:
     - ./autogen.sh
     - ./configure --with-xmlrpc-c
-    - make 
+    - make -j 8
     - make install
     - ldconfig 
   tags: source
@@ -251,7 +251,7 @@
 - name: Add init script
   template:
     src=rtorrent-daemon.j2
-    dest=/etc/init.d/rtorrent-daemon
+    dest=/usr/local/bin/rtorrent-daemon
     owner=root
     group=root
     mode=0775
@@ -260,7 +260,7 @@
 
 
 - name: Add auto start
-  cron: name="start rtorrent at start" special_time=reboot job="/etc/init.d/rtorrent-daemon start"
+  cron: name="start rtorrent at start" special_time=reboot job="/usr/local/bin/rtorrent-daemon start"
   notify:
     - restart rtorrent
 

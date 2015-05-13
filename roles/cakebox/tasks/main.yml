@@ -16,6 +16,14 @@
     - libsasl2-2
     - libsasl2-dev
     - libcurl3 
+    - apache2.2-common
+
+- name: enable apache module
+  command: a2enmod {{ item }}
+  with_items:
+    - headers
+    - rewrite
+  notify: Restart apache
 
 - name: install composer
   shell: curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin creates=/usr/local/bin/composer
@@ -27,21 +35,23 @@
   file: path=/usr/local/bin/composer mode=a+x state=file
 
 - name: Download nodejs 
-  get_url: url=http://nodejs.org/dist/node-latest.tar.gz dest=/tmp/node-latest.tar.gz timeout=120
+  get_url: url=http://nodejs.org/dist/v0.12.2/node-v0.12.2.tar.gz dest=/tmp/node-v0.12.2.tar.gz timeout=120
 
 - name: Unpack nodejs
-  command: tar -xzf node-latest.tar.gz chdir=/tmp/
+  command: tar -xzf node-v0.12.2.tar.gz chdir=/tmp/
 
 - name: Compile and install nodejs {{nodejs_version_tag}}
-  shell: ./configure && make && make install chdir=/tmp/node-latest
-  sudo: true
-  when: wanted_version_installed.rc == 1
+  command: chdir=/tmp/node-v0.12.2 {{ item }}  #creates=/usr/local/bin/rtorrent
+  with_items:
+    - ./configure
+    - make -j 8
+    - make install
 
 - name: Install Bower
   npm: name=bower state=present global=yes
 
 - name: Copie file from git
-  git: repo=https://github.com/Cakebox/Cakebox-light.git dest=/var/www/cakebox force=yes
+  shell: git clone https://github.com/Cakebox/Cakebox-light.git /var/www/cakebox
 
 - name: get the last version
   shell: git checkout -b $(git describe --tags $(git rev-list --tags --max-count=1)) chdir=/var/www/cakebox
@@ -50,4 +60,41 @@
   composer: command=install working_dir=/var/www/cakebox
 
 - name: bower install
-  bower: path=/var/www/cakebox state=latest
+  command: bower install --allow-root chdir=/var/www/cakebox
+
+- name: Create cakebox virtual directory
+  template:
+    src=cakebox.j2
+    dest=/etc/apache2/sites-available/cakebox.conf
+    owner=root
+    group=root
+    mode=0644
+
+- name: Enable rutorrent site
+  command: a2ensite cakebox
+  notify: Restart apache
+
+- name: Create cakeboxpass file
+  htpasswd: 
+    path={{ cakebox_passwd_file }}
+    name={{ ru_user }} 
+    password={{ ru_password }}
+    create=yes
+    state=present
+    owner=root
+    group=www-data
+    mode=0640
+
+- name: set access to the download folder
+  file: path={{ rutorrent_home }}/rtorrent/download owner={{ rutorrent_user }} group={{ rutorrent_apache_user }} mode=7774 recurse=yes
+
+- name: set acl
+  command: setfacl -d -m group:www-data:rw /home/rutorrent/rtorrent/download/
+
+- name: Create cakebox default config
+  template:
+    src=defaultConfigCakebox.j2
+    dest=/var/www/cakebox/config/default.php
+    owner=root
+    group=root
+    mode=0664

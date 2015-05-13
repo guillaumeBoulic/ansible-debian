@@ -10,4 +10,7 @@ dht = auto
 dht_port = 6881
 peer_exchange = yes
 execute = {sh,-c,/usr/bin/php /var/www/rutorrent/php/initplugins.php {{ rutorrent_user }} &}
+bind = 0.0.0.0
+port_random = no
+
 

@@ -1,0 +1,55 @@
+<VirtualHost *:443>
+    # here replace with the subdomain you have created, you must own YOURDOMAIN.COM
+    ServerName {{ cakebox_add }}
+    ServerAdmin {{ cakebox_email }}
+    # use debug instead of production to get more log
+    SetEnv APPLICATION_ENV production 
+
+    # alias for download and streaming, it must point to your download directory
+    # replace /YOUR/PATH with the same path as cakebox.root variable in app/config/
+    Alias /access {{ rutorrent_home }}/rtorrent/download
+    <Directory {{ rutorrent_home }}/rtorrent/download>
+        Options -Indexes
+
+        Order allow,deny 
+        Allow from all
+        Satisfy Any
+
+        Header set Content-Disposition "attachment"
+    </Directory>
+
+    DocumentRoot /var/www/cakebox/public/
+    <Directory /var/www/cakebox/public/>
+        Options Indexes MultiViews FollowSymLinks
+        AllowOverride none
+
+        RewriteEngine On
+        RewriteBase /
+        RewriteCond %{REQUEST_FILENAME} !-f
+        RewriteRule ^ index.php [L]
+
+	AuthType Basic
+        AuthName '{{ cakebox_login_prompt }}'
+        AuthUserFile '{{ cakebox_passwd_file }}'
+        require valid-user
+	Order deny,allow
+	Deny from all
+	Allow from all
+
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/cakebox-error.log
+    LogLevel warn
+    CustomLog ${APACHE_LOG_DIR}/cakebox-access.log combined
+    SSLEngine on
+    SSLCertificateFile {{ cakebox_ssl_dir }}/{{ cakebox_ssl_cert }}
+    SSLCertificateKeyFile {{ cakebox_ssl_dir }}/{{ cakebox_ssl_key }}
+</VirtualHost>
+<VirtualHost *:80>
+  ServerName {{ cakebox_add }}
+  ServerSignature Off
+
+  RewriteEngine on
+  RewriteCond %{HTTPS} !=on
+  RewriteRule .* https://%{SERVER_NAME}%{REQUEST_URI} [NE,R,L]
+</VirtualHost>
