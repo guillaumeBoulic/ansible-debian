@@ -50,11 +50,17 @@
 - name: Install Bower
   npm: name=bower state=present global=yes
 
+- name: Check Cakebox directory existence
+  stat: path=/var/www/cakebox
+  register: cakebox_dir
+
 - name: Copie file from git
   shell: git clone https://github.com/Cakebox/Cakebox-light.git /var/www/cakebox
+  when: not cakebox_dir.stat.exists
 
 - name: get the last version
   shell: git checkout -b $(git describe --tags $(git rev-list --tags --max-count=1)) chdir=/var/www/cakebox
+  when: not cakebox_dir.stat.exists
 
 - name: composer install
   composer: command=install working_dir=/var/www/cakebox

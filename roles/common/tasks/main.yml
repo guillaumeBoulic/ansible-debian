@@ -127,7 +127,7 @@
     - "fi # add by ansible colo and completion end if 2"
 
 - name:
-  command: "{{ item }}"
+  shell: "{{ item }}"
   with_items:
     - "export LANGUAGE=en_US.UTF-8"
     - "export LANG=en_US.UTF-8"
