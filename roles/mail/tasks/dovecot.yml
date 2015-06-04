@@ -7,6 +7,7 @@
     - dovecot-imapd
     - dovecot-mysql
     - dovecot-lmtpd
+    - dovecot-pop3d
 
 - name: Mail | dovecot | Ensure mail directories are in place
   file: state=directory path=/srv/data/mail/decrypted/{{ item.name }}/{{ item.primary_user }} owner={{ mailserver_user }} group=dovecot

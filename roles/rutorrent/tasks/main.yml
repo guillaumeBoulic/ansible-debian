@@ -100,7 +100,7 @@
   with_items:
     - "{{ rutorrent_ssl_key }}"
     - "{{ rutorrent_ssl_cert }}"
-  tags: newkey
+  tags: ssl
 
 - name: Create key and cert file
   command: 

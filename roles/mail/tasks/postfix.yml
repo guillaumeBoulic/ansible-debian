@@ -17,7 +17,7 @@
     - postgrey
 
 - name: Mail | postfix | Create database user for mail server
-  mysql_user: user={{ mail_mysql_username }} password={{ mail_mysql_password }} state=present priv="mailserver.*:ALL"
+  mysql_user: user={{ mail_mysql_username }} password={{ mail_mysql_password }} state=present priv="{{ mail_mysql_database }}.*:ALL"
 
 - name: Mail | postfix | Create database for mail server
   mysql_db: name={{ mail_mysql_database }} state=present
