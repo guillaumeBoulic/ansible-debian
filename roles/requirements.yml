@@ -3,3 +3,4 @@
 roles:
   # Install a role from Ansible Galaxy.
   - name: robertdebock.update
+  - name: robertdebock.bootstrap
