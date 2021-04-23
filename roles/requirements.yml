@@ -1,2 +1,5 @@
+
 ---
-- name: robertdebock.update
+roles:
+  # Install a role from Ansible Galaxy.
+  - name: robertdebock.update
