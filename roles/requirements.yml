@@ -2,7 +2,4 @@
 ---
 roles:
   # Install a role from Ansible Galaxy.
-  - name: robertdebock.update
-  - name: robertdebock.bootstrap
-  - name: yabusygin.gitlab
-  - name: yabusygin.docker
+  - name: geerlingguy.gitlab
